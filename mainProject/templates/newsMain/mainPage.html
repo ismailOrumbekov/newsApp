@@ -1,0 +1,84 @@
+{% extends 'newsMain/basePages/basePage.html' %}
+
+{% block content %}
+
+<div class="top-news">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-md-6 tn-left">
+                        <div class="tn-img">
+                            <img src="{{ top_news.0.img_url }}" />
+                            <div class="tn-content">
+                                <div class="tn-content-inner">
+                                    <a class="tn-date" href=""><i class="far fa-clock"></i>{{ top_news.0.date }}</a>
+                                    <a class="tn-title" href="{% url 'article' %}?link={{ top_news.0.article_url }}">{{ top_news.0.title }}</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 tn-right">
+                        <div class="row">
+
+                {% if top_news %}
+                {% for item in top_news|slice:"1:5" %}
+                            <div class="col-md-6">
+                                <div class="tn-img">
+                                    <img src="{{ item.img_url }}" />
+                                    <div class="tn-content">
+                                        <div class="tn-content-inner">
+                                            <a class="tn-date" href=""><i class="far fa-clock"></i>{{ item.date }}</a>
+                                            <a class="tn-title" href="{% url 'article' %}?link={{ item.article_url }}">{{ item.title }}</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                {% endfor %}
+                    {% else %}
+                    <p>Проблемы на сайте tengri news</p>
+                    {% endif %}
+
+
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+{% for section in section_data %}
+    {% if forloop.counter0 == 0 or forloop.counter0|divisibleby:2 %}
+    <div class="cat-news">
+                <div class="container-fluid">
+            <div class="row">
+    {% endif %}
+                <div class="col-md-6">
+                    <h2><i class="fas fa-align-justify"></i>{{ section.title }}</h2>
+                    <div class="row cn-slider">
+                        {% for article in section.article_data %}
+                        <div class="col-md-6">
+                            <div class="cn-img">
+                                <img src="{{ article.img_url }}" />
+                                <div class="cn-content">
+                                    <div class="cn-content-inner">
+                                        <a class="cn-date" href=""><i class="far fa-clock"></i>05-Feb-2020</a>
+                                        <a class="cn-title" href="{% url 'article' %}?link={{ article.article_url }}">{{ article.title }}</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+    {% if forloop.counter0 > 0 and not forloop.counter0|divisibleby:2 %}
+
+                </div>
+        </div>
+    </div>
+    {% endif %}
+{% endfor %}
+
+
+
+{% endblock %}
