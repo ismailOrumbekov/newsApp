@@ -1,21 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 
-
-class News:
-    title = ""
-    image_url = ""
-    creating_date = ""
-    category = ""
-
-    def __init__(self, title, image_url, creating_date):
-        self.title = title
-        self.image_url = image_url
-        self.creating_date = creating_date
-
-
-import requests
-from bs4 import BeautifulSoup
+from .article_data import SELECTORS
 
 
 def extract_article_data(article):
@@ -23,7 +9,9 @@ def extract_article_data(article):
     article_title = article.find('span', class_='main-news_super_item_title').text.strip()
     img_element = article.find('img', class_='main-news_top_item_img')
     time = article.find('time').text.strip()
-    article_url = "https://tengrinews.kz/" + article.find('a')["href"]
+    article_url = article.find('a')['href']
+    if not article_url.startswith('https'):
+        article_url = "https://tengrinews.kz/" + article_url
     if img_element:
         img_url = "https://tengrinews.kz/" + img_element['src']
     return {"title": article_title, "img_url": img_url, "date": time, "article_url" : article_url}
@@ -36,7 +24,9 @@ def extract_section_data(section):
 
     for data in section_items:
         try:
-            article_url = "https://tengrinews.kz/" + data.find('a')['href']
+            article_url = data.find('a')['href']
+            if not article_url.startswith('https'):
+                article_url = "https://tengrinews.kz/" + article_url
 
             img_url = ""
             img_element = data.find('img', class_='main-news_top_item_img')
@@ -71,27 +61,19 @@ def scrape_tengri_news():
     return news, section_data
 
 
-def get_tengri_article(link):
+def get_tengri_article(link, article_type):
     response = requests.get(link)
 
     if response.status_code == 200:
         soup = BeautifulSoup(response.content, 'html.parser')
-        date = soup.find('div', class_="date-time").text.strip()
-        title = soup.find("h1", class_="head-single").text.strip()
-        description = soup.find("div", class_='content_main_text').text.strip()
-        image_url = "https://tengrinews.kz/" + soup.find("picture", class_='content_main_thumb_img').find("img")["src"]
-        tags_container = soup.find("div", class_="content_main_text_tags")
-        tags = [tag.text.strip() for tag in tags_container.find_all("span")]
+        selectors = SELECTORS[article_type]
 
-        return {"title" : title, "date" : date, "description" : description, "image_url" : image_url, "tags": tags}
+        title = soup.find(*selectors["title"]).text.strip()
+        date = soup.find(*selectors["date"]).text.strip()
+        description = [tag.text for tag in soup.find(*selectors["description"]).find_all("p")]
+        image_url = "https://tengrinews.kz/" + soup.find(*selectors["image"]).find("img")["src"]
+        tags = selectors["tags"]
 
-
-def get_tengri_life_article(link):
-    response = requests.get(link)
-
-    if response.status_code == 200:
-        soup = BeautifulSoup(response.content, 'html.parser')
-        title = soup.find("h1", class_="post-title").text.strip()
-        date = soup.find("span", class_="date")
-        description = [tag.text for tag in soup.find("div", class_="post-content").find_all("p")]
-
+        return {"title": title, "date": date, "description": description, "image_url": image_url, "tags": tags}
+    else:
+        raise Exception("Failed to fetch article data")
